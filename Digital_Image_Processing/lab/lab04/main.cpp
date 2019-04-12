@@ -1,4 +1,4 @@
-﻿/*
+/*
 1.	均值滤波(空域)
 	具体内容：利用 OpenCV 对灰度图像像素进行操作，分别利用算术均值滤波器、几何均值滤波器、谐波和逆谐波均值滤波器进行图像去噪。模板大小为5*5。（注：请分别为图像添加高斯噪声、胡椒噪声、盐噪声和椒盐噪声，并观察滤波效果）
 
@@ -480,11 +480,13 @@ void my_adaptive_median_filter(Mat & img_with_noise, int size = 5){
 }
 
 /*
-	算术均值滤波
 	分别添加高斯噪声, 胡椒噪声, 盐噪声, 椒盐噪声
 	并观察滤波效果
 */
 void lab1(){
+	cout << "几何均值滤波, 适合盐噪声, 不适合胡椒噪声\n";
+	cout << "谐波均值滤波, 适合盐噪声, 不适合胡椒噪声\n";
+	cout << "逆谐波均值滤波, Q < 0 时去除盐噪声, Q > 0 时去除胡椒噪声\n";
 	Mat img, img_with_noise;
 	img = imread("lenna.jpg", 0);
 
@@ -603,6 +605,8 @@ void lab1(){
 	分别添加胡椒噪声, 盐噪声, 椒盐噪声
 */
 void lab2(){
+	cout << "中值滤波, 与同尺寸线性平滑滤波相比, 模糊更小\n";
+
 	Mat img, img_with_noise;
 	img = imread("lenna.jpg", 0);
 
@@ -702,6 +706,12 @@ void lab2(){
 	模板大小 7*7（对比均值滤波器的效果）
 */
 void lab3(){
+	cout << "自适应均值滤波\n";
+	cout << "f(x, y) = g(x, y) - (sigma_global^2 / sgima_local^2) * [g(x, y) - mean_local]\n";
+	cout << "sigma_global == 0 时, 说明没有噪声, 返回g(x, y) 即可\n";
+	cout << "(sigma_global^2 / sgima_local^2) ≈ 0, 局部方差与全局噪声方差高度相关, 则返回 g(x, y) 的一个近似值\n";
+	cout << "sigma_global == sigma_local, 局部方差与全局噪声方差有相同特性, 返回 mean, 即用均值降噪\n";
+
 	Mat img, img_with_noise;
 	img = imread("lenna.jpg", 0);
 
@@ -739,6 +749,10 @@ void lab3(){
 */
 
 void lab4(){
+	cout << "自适应中值滤波\n";
+	cout << "如果脉冲噪声概率分布更大, 可以用自适应中值滤波\n";
+	cout << "处理费脉冲噪声的时候可以保留细节\n";
+
 	Mat img, img_with_noise;
 	img = imread("lenna.jpg", 0);
 
@@ -804,7 +818,11 @@ int main(){
 
 	// normal_distribution_test();
 	// return 0;
-
+	cout << "1. 均值滤波\n";
+	cout << "2. 中值滤波\n";
+	cout << "3. 自适应均值滤波\n";
+	cout << "4. 自适应中值滤波\n";
+	cout << "5. 彩色图像均值滤波\n";
 	char option = '1';
 	while( true ){
 		cout << "输入实验编号: ";

@@ -1,4 +1,4 @@
-﻿/*
+/*
 1.	灰度图像的 DFT 和 IDFT。
 	具体内容：利用 OpenCV 提供的 cvDFT 函数对图像进行 DFT 和 IDFT 变换
 
@@ -101,7 +101,7 @@ void dft_opencv(Mat & space, Mat & frequency){
 	imshow("频谱", magI);
 }
 
-void my_dft(Mat & space, Mat & frequency){
+void my_dft(Mat & space, Mat & frequency, bool show_spectrum = false){
 	// expand input image to optimal size, 扩展到合适的尺寸, 方便进行 DFT
 	// 快速傅立叶变换要求最佳尺寸为 2 的 n 次方
 	Mat padded;
@@ -137,38 +137,39 @@ void my_dft(Mat & space, Mat & frequency){
 	dft(complexI, complexI);
 	complexI.copyTo(frequency);
 
+	if( show_spectrum == true ){
+		/****************** 下面是生成频谱的过程 *******************/
+		// compute the magnitude and switch to logarithmic scale
+		// => log[ 1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2) ]
+		// 将 complex 拆分为两部分, planes[0] 和 planes[1]
+		// planes[0] = Re( DFT(I) ), 实部
+		// planes[1] = Im( DFT(I) ), 虚部
+		split(complexI, planes);
 
-	/****************** 下面是生成频谱的过程 *******************/
-	// compute the magnitude and switch to logarithmic scale
-	// => log[ 1 + sqrt(Re(DFT(I))^2 + Im(DFT(I))^2) ]
-	// 将 complex 拆分为两部分, planes[0] 和 planes[1]
-	// planes[0] = Re( DFT(I) ), 实部
-	// planes[1] = Im( DFT(I) ), 虚部
-	split(complexI, planes);
+		// 计算幅值, sqrt(Re ^ 2, Im ^ 2)
+		// 将幅值保存在 planes[0] 中
+		magnitude( planes[0], planes[1], planes[0] );
+		Mat magI = planes[0];
 
-	// 计算幅值, sqrt(Re ^ 2, Im ^ 2)
-	// 将幅值保存在 planes[0] 中
-	magnitude( planes[0], planes[1], planes[0] );
-	Mat magI = planes[0];
+		// switch to logarithmic scale
+		// 对数变换 s = log(1 + r), 方便人眼观察
+		// log(1 + magI)
+		magI += Scalar::all(1);
+		log(magI, magI);
 
-	// switch to logarithmic scale
-	// 对数变换 s = log(1 + r), 方便人眼观察
-	// log(1 + magI)
-	magI += Scalar::all(1);
-	log(magI, magI);
+		// crop the spectrum, if it has an odd number of rows or columns
+		// -2 = 0xfffffffe, 前面全 1, 最后一位是 0, & -2 就是把最后一位置零
+		// 裁剪频谱, 使行列为偶数
+		magI = magI( Rect(0, 0, magI.cols & -2, magI.rows & -2) );
 
-	// crop the spectrum, if it has an odd number of rows or columns
-	// -2 = 0xfffffffe, 前面全 1, 最后一位是 0, & -2 就是把最后一位置零
-	// 裁剪频谱, 使行列为偶数
-	magI = magI( Rect(0, 0, magI.cols & -2, magI.rows & -2) );
+		// Transform the matrix with float values into a
+		// viewable image form (float between values 0 and 1).
+		// 缩放, 便于观察
+		normalize(magI, magI, 0, 1, CV_MINMAX); 
 
-	// Transform the matrix with float values into a
-	// viewable image form (float between values 0 and 1).
-	// 缩放, 便于观察
-	normalize(magI, magI, 0, 1, CV_MINMAX); 
-
-	imshow("频谱", magI);
-	/****************** 频谱 *******************/
+		imshow("频谱", magI);
+		/****************** 频谱 *******************/
+	}
 }
 
 /*
@@ -252,12 +253,12 @@ void my_Butterworth_pass_Filter(Mat & frequency, int D0 = 200, int expo_n = 20, 
 
 void lab1(){
 	Mat space_img, frequency_img;
-	// space_img = imread("board.jpg", 0);
-	space_img = imread("imageTextN.png", 0);
+	space_img = imread("board.jpg", 0);
+	// space_img = imread("imageTextN.png", 0);
 	imshow("原图", space_img);
 
 	if( true ){
-		my_dft(space_img, frequency_img);
+		my_dft(space_img, frequency_img, true);
 	}
 
 	if( true ){
@@ -332,6 +333,9 @@ int main(){
 	ios::sync_with_stdio(false);
 	cin.tie(0);
 
+	cout << "1. 傅里叶正反变换\n";
+	cout << "2. 理想低通/高通\n";
+	cout << "3. 布特沃斯\n";
 	char option = '1';
 	while( true ){
 		cout << "输入实验编号: ";
